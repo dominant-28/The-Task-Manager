@@ -33,6 +33,23 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 app.use(morgan("dev"))
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false, // better: don’t save empty sessions
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,  // <-- your DB
+      collectionName: "sessions"
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV !== "development",
+      httpOnly: true,
+      sameSite: "None",
+      maxAge: 24 * 60 * 60 * 1000
+    }
+  })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use("/api",routes)
