@@ -98,16 +98,23 @@ export const addTeamMember = async (req, res) => {
   try {
     const { name, email, title } = req.body;
     const adminId = req.user.userId;
-   
-    // Check if already exists
+
+    // Check if user exists
     let user = await User.findOne({ email });
-    
+
     if (user) {
-      return res.status(400).json({ status: false, message: "User already exists" });
+      // ✅ If user exists, just link them to the team
+      await User.findByIdAndUpdate(adminId, {
+        $addToSet: { teamMembers: user._id },
+      });
+
+      return res
+        .status(200)
+        .json({ status: true, message: "User added to your team", user });
     }
 
-    // Create user with default password
-    const defaultPassword = "sync1234"; // let them change it later
+    // ✅ If not, create a new user
+    const defaultPassword = "sync1234";
 
     user = await User.create({
       name,
@@ -119,7 +126,7 @@ export const addTeamMember = async (req, res) => {
       teamAdmin: adminId,
     });
 
-    // Add to admin's teamMembers array
+    // Add to admin's team
     await User.findByIdAndUpdate(adminId, {
       $addToSet: { teamMembers: user._id },
     });
@@ -131,21 +138,26 @@ export const addTeamMember = async (req, res) => {
       notiType: "message",
       isRead: [],
     });
+
     await sendEmail(
-  email,
-  "Welcome to SyncTask!",
-  `<h3>Hello ${name},</h3>
-   <p>You've been added to a team by ${req.user.name}.</p>
-   <p>Your login email: <b>${email}</b></p>
-   <p>Your temporary password: <b>sync1234</b></p>
-   <p>Please login and change your password.</p>
-   <br><p>– SyncTask Team</p>`
-);
+      email,
+      "Welcome to SyncTask!",
+      `<h3>Hello ${name},</h3>
+       <p>You've been added to a team by ${req.user.name}.</p>
+       <p>Your login email: <b>${email}</b></p>
+       <p>Your temporary password: <b>sync1234</b></p>
+       <p>Please login and change your password.</p>
+       <br><p>– SyncTask Team</p>`
+    );
 
-    res.status(201).json({ status: true, message: "Team member added successfully", user });
-
+    res
+      .status(201)
+      .json({ status: true, message: "New user created and added to team", user });
   } catch (error) {
-    return res.status(400).json({ status: false, message: error.message });
+    console.error(error);
+    return res
+      .status(400)
+      .json({ status: false, message: error.message });
   }
 };
 
