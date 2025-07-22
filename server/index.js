@@ -39,7 +39,7 @@ app.use(
     resave: false,
     saveUninitialized: false, // better: don’t save empty sessions
     store: MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI,  // <-- your DB
+      mongoUrl: process.env.MONGODB_URL,  // <-- your DB
       collectionName: "sessions"
     }),
     cookie: {
