@@ -8,7 +8,7 @@ export default defineConfig({
     port:3000,
     proxy:{
       '/api':{
-        target:'https://the-task-manager-rkxd.vercel.app',
+        target:'https://the-task-manager.onrender.com',
         changeOrigin:true,
       }
     }
